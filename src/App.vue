@@ -1,10 +1,16 @@
 <template>
-  <nav style="padding: 1rem 0; border-bottom: 1px solid #eee;">
-    <RouterLink to="/" style="margin-right: 1rem;">Каталог</RouterLink>
+  <nav>
+    <RouterLink to="/">Каталог</RouterLink>
     <RouterLink to="/cart">Корзина</RouterLink>
+    
+    <span class="fav-counter">
+      Избранное: {{ favStore.count }}
+    </span>
   </nav>
   <RouterView />
 </template>
 
 <script setup>
+import { useFavoritesStore } from './stores/favorites.js'
+const favStore = useFavoritesStore()
 </script>

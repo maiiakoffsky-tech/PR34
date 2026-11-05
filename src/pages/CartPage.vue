@@ -2,8 +2,17 @@
   <div class="page">
     <h1>Корзина</h1>
     <div class="cart-summary">
-      <p><strong>Товаров:</strong> {{ cartStore.count }}</p>
+      <p><strong>Товаров:</strong> {{ cartStore.count }} / 10</p>
       <p><strong>Итого:</strong> {{ cartStore.sum }} ₽</p>
+      
+      <div class="cart-controls">
+        <button v-if="cartStore.lastState" @click="cartStore.undo()" class="btn-undo">
+          ⬅️ Отменить
+        </button>
+        <button @click="downloadCart" class="btn-download">
+          Скачать JSON
+        </button>
+      </div>
     </div>
 
     <ul v-if="cartStore.items.length" class="cart-list">
@@ -17,16 +26,16 @@
           <span>{{ item.price }} ₽</span>
         </div>
         <div class="item-actions">
-          <button @click="updateQuantity(item.id, -1)" class="btn-qty">-</button>
+          <button @click="cartStore.updateQuantity(item.id, -1)" class="btn-qty">-</button>
           <span>{{ item.quantity }}</span>
-          <button @click="updateQuantity(item.id, 1)" class="btn-qty">+</button>
-          <button @click="removeFromCart(item.id)" class="btn-remove">Удалить</button>
+          <button @click="cartStore.updateQuantity(item.id, 1)" class="btn-qty">+</button>
+          <button @click="cartStore.removeFromCart(item.id)" class="btn-remove">Удалить</button>
         </div>
       </li>
     </ul>
     <p v-else>Корзина пуста.</p>
 
-    <button v-if="cartStore.items.length" @click="clearCart" class="btn-danger">
+    <button v-if="cartStore.items.length" @click="cartStore.clearCart()" class="btn-danger">
       Очистить корзину
     </button>
 
@@ -41,15 +50,14 @@ import { useCartStore } from '../stores/cart.js'
 
 const cartStore = useCartStore()
 
-const removeFromCart = (id) => {
-  cartStore.removeFromCart(id)
-}
-
-const updateQuantity = (id, delta) => {
-  cartStore.updateQuantity(id, delta)
-}
-
-const clearCart = () => {
-  cartStore.clearCart()
+const downloadCart = () => {
+  const dataStr = JSON.stringify(cartStore.items, null, 2)
+  const blob = new Blob([dataStr], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'my_cart.json'
+  link.click()
+  URL.revokeObjectURL(url)
 }
 </script>

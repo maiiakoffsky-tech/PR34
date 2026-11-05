@@ -3,6 +3,8 @@ import { defineStore } from 'pinia'
 export const useCartStore = defineStore('cart', {
   state: () => ({
     items: JSON.parse(localStorage.getItem('cart_items')) || [],
+    warningMessage: '',
+    lastState: null
   }),
   
   getters: {
@@ -11,7 +13,20 @@ export const useCartStore = defineStore('cart', {
   },
   
   actions: {
+    saveHistory() {
+      this.lastState = JSON.parse(JSON.stringify(this.items))
+    },
+
     addToCart(product) {
+      this.warningMessage = ''
+      
+      // Проверка лимита (не больше 10)
+      if (this.count >= 10) {
+        this.warningMessage = 'Нельзя добавить больше 10 товаров!'
+        return
+      }
+
+      this.saveHistory()
       const existing = this.items.find((i) => i.id === product.id)
       if (existing) {
         existing.quantity += 1
@@ -27,11 +42,13 @@ export const useCartStore = defineStore('cart', {
     },
 
     removeFromCart(id) {
+      this.saveHistory()
       this.items = this.items.filter((i) => i.id !== id)
       this.saveToLocalStorage()
     },
 
     updateQuantity(id, delta) {
+      this.saveHistory()
       const item = this.items.find((i) => i.id === id)
       if (!item) return
       item.quantity += delta
@@ -43,8 +60,17 @@ export const useCartStore = defineStore('cart', {
     },
 
     clearCart() {
+      this.saveHistory()
       this.items = []
       this.saveToLocalStorage()
+    },
+
+    undo() {
+      if (this.lastState) {
+        this.items = JSON.parse(JSON.stringify(this.lastState))
+        this.lastState = null
+        this.saveToLocalStorage()
+      }
     },
 
     saveToLocalStorage() {
